@@ -1,62 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import List from './components/List';
+import Alert from './components/Alert';
 
 function App() {
-    const [list, setList] = useState('');
+    const getStoredList = () => {
+        const storedList = JSON.parse(localStorage.getItem('list'));
+        if (storedList) {
+            return storedList;
+        } else {
+            return [];
+        }
+    };
+
+    const [list, setList] = useState(getStoredList());
     const [input, setInput] = useState({ id: '', title: '' });
-    const [alert, setAlert] = useState({ class: '', text: '' });
+    const [alert, setAlert] = useState({ type: '', text: '' });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (input.title === '') return;
+        if (!input.title) {
+            showAlert('danger', 'please enter value');
+            return;
+        }
         setList([...list, input]);
-        setAlert({ class: 'alert-success', text: 'item added to list' });
+        setInput({ id: '', title: '' });
+        showAlert('success', 'item added to list');
         e.target.reset();
-        // setTimeout(() => {
-        //     setAlert({ class: '', text: '' });
-        // }, 3000);
     };
 
     const handleDelete = (id) => {
-        const newList = list.filter((item) => {
-            return item.id !== id;
-        });
+        const newList = list.filter((item) => item.id !== id);
         setList(newList);
-        setAlert({ class: 'alert-danger', text: 'item removed' });
-        // setTimeout(() => {
-        //     setAlert({ class: '', text: '' });
-        // }, 3000);
+        showAlert('danger', 'item removed');
     };
 
     const handleEdit = (id) => {
-        const item = list.filter((item) => {
-            return item.id === id;
-        });
+        const item = list.filter((item) => item.id === id);
         console.log(item[0].id);
         console.log(item[0].title);
     };
 
     const handleClear = () => {
         setList([]);
-        setAlert({ class: 'alert-danger', text: 'empty list' });
-        // setTimeout(() => {
-        //     setAlert({ class: '', text: '' });
-        // }, 3000);
+        showAlert('danger', 'empty list');
+    };
+
+    const showAlert = (type, text) => {
+        setAlert({ type, text });
     };
     useEffect(() => {
-        if (list.length === 0) {
-            setList('');
+        if (list.length >= 0) {
+            localStorage.setItem('list', JSON.stringify(list));
         }
-        setTimeout(() => {
-            setAlert({ class: '', text: '' });
-        }, 3000);
     }, [list]);
+
     return (
         <section className='section-center'>
             <form className='grocery-form' onSubmit={handleSubmit}>
-                {alert && (
-                    <p className={`alert ${alert.class}`}>{alert.text}</p>
-                )}
+                {alert.type && <Alert {...alert} removeAlert={showAlert} />}
                 <h3>grocery bud</h3>
                 <div className='form-control'>
                     <input
@@ -75,14 +76,14 @@ function App() {
                     </button>
                 </div>
             </form>
-            {list && (
+            {list.length > 0 && (
                 <div className='grocery-container'>
                     <div className='grocery-list'>
-                        {list.map((item, index) => {
+                        {list.map((item) => {
                             const { id, title } = item;
                             return (
                                 <List
-                                    key={index}
+                                    key={id}
                                     id={id}
                                     title={title}
                                     onDelete={handleDelete}
