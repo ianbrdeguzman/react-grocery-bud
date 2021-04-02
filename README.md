@@ -1,6 +1,6 @@
 # React Grocery Bud
 
-Check it our [here!]()
+Check it our [here!](https://ianbrdeguzman.github.io/react-grocery-bud/)
 
 ## Created using:
 
