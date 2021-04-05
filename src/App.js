@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import List from './components/List';
 import Alert from './components/Alert';
 
-function App() {
-    const getStoredList = () => {
-        const storedList = JSON.parse(localStorage.getItem('list'));
-        if (storedList) {
-            return storedList;
-        } else {
-            return [];
-        }
-    };
+const getStoredList = () => {
+    const storedList = JSON.parse(localStorage.getItem('list'));
+    if (storedList) {
+        return storedList;
+    } else {
+        return [];
+    }
+};
 
+function App() {
     const [list, setList] = useState(getStoredList());
     const [input, setInput] = useState({ id: '', title: '' });
     const [alert, setAlert] = useState({ type: '', text: '' });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editId, setEditId] = useState(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -22,10 +24,26 @@ function App() {
             showAlert('danger', 'please enter value');
             return;
         }
-        setList([...list, input]);
-        setInput({ id: '', title: '' });
-        showAlert('success', 'item added to list');
-        e.target.reset();
+        if (input && isEditing) {
+            setList(
+                list.map((item) => {
+                    if (item.id === editId) {
+                        return { ...item, title: input.title };
+                    }
+                    return item;
+                })
+            );
+            setInput({ id: '', title: '' });
+            setEditId(null);
+            setIsEditing(false);
+            showAlert('success', 'value changed');
+            e.target.reset();
+        } else if (input && !isEditing) {
+            setList([...list, input]);
+            setInput({ id: '', title: '' });
+            showAlert('success', 'item added to list');
+            e.target.reset();
+        }
     };
 
     const handleDelete = (id) => {
@@ -36,8 +54,10 @@ function App() {
 
     const handleEdit = (id) => {
         const item = list.filter((item) => item.id === id);
-        console.log(item[0].id);
-        console.log(item[0].title);
+        setIsEditing(true);
+        setEditId(id);
+        setInput({ id, title: item[0].title });
+        showAlert('danger', 'editing...');
     };
 
     const handleClear = () => {
@@ -65,14 +85,19 @@ function App() {
                         type='text'
                         name='grocery'
                         id='grocery'
+                        value={input.title}
                         placeholder='e.g. eggs'
                         onChange={(e) => {
-                            const id = new Date().getTime();
-                            setInput({ id: id, title: e.target.value });
+                            if (isEditing) {
+                                setInput({ id: editId, title: e.target.value });
+                            } else {
+                                const id = new Date().getTime();
+                                setInput({ id: id, title: e.target.value });
+                            }
                         }}
                     />
                     <button className='submit-btn' type='submit'>
-                        submit
+                        {isEditing ? 'edit' : 'add'}
                     </button>
                 </div>
             </form>
